@@ -1,7 +1,5 @@
 ## **Minecraft Bedrock Data Handlers**
 
-![Minecraft Bedrock](https://img.icons8.com/color/48/minecraft.png)
-
 ### **Overview**
 Welcome to the **Minecraft Bedrock Addon Data Handlers** library! This package offers a powerful set of tools to manage player, item, and world data in your Minecraft Bedrock addons. With a simple and intuitive API, developers can easily integrate complex data handling capabilities into their custom Minecraft Bedrock projects.
 
