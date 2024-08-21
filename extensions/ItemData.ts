@@ -1,4 +1,4 @@
-import { Enchantment, EnchantmentType, EntityComponentTypes, EntityEquippableComponent, EntityInventoryComponent, EquipmentSlot, ItemComponentTypes, ItemEnchantableComponent, ItemStack, Player, Vector3, world } from "@minecraft/server";
+import { Enchantment, EnchantmentType, EntityAttributeComponent, EntityComponentTypes, EntityEquippableComponent, EntityInventoryComponent, EquipmentSlot, ItemComponentTypes, ItemDurabilityComponent, ItemEnchantableComponent, ItemStack, Player, Vector3, world } from "@minecraft/server";
 import { EffectDataT, EnchantmentDataT, ItemEffectDataT } from "../types"; // Use our custom types
 import { MinecraftFormatCodes, removeFormat } from "./ChatFormat"
 import { ItemEffects } from "./ItemEffects";
@@ -31,6 +31,9 @@ export class ItemData {
     public slot: EquipmentSlot | number | undefined;
     private player: Player;
 
+    // Read only
+    protected maxDurability: number = 0;
+    public DurabilityComponent: ItemDurabilityComponent | undefined;
     public EnchantableComponent: ItemEnchantableComponent | undefined;
     constructor(item: ItemStack, player: Player, slot?: EquipmentSlot | number) {
         this.item = item;
@@ -38,6 +41,15 @@ export class ItemData {
         this.slot = slot; // You need to set the slot for anything besides lore adjustments.
 
         const itemEnchantments = this.item.getComponent(ItemComponentTypes.Enchantable) as ItemEnchantableComponent;
+        const durabilityComponent = this.item.getComponent("durability") as ItemDurabilityComponent;
+        const attributeComponent = this.item.getComponent("minecraft:attribute_modifiers") as EntityAttributeComponent;
+        attributeComponent.setCurrentValue
+		if (durabilityComponent) { 
+            durabilityComponent.damage = 0;
+            this.maxDurability = durabilityComponent.maxDurability;
+			this.DurabilityComponent = durabilityComponent;
+		}
+        
         if (itemEnchantments) {
             this.EnchantableComponent = itemEnchantments;
         }
@@ -441,13 +453,106 @@ export class ItemData {
         this.setEffects(effects);
     }
 
+    // Item functions
+    /**
+     * Set the durability of the item
+     * @param {number} durability - The durability to set
+     * @example
+     * itemData.setDurability(100);
+     * @returns {void}
+     */
+    public setDurability(durability: number): void {
+        if (!this.DurabilityComponent) {
+            debugWarn("setDurability", "Item does not have a durability component.");
+            return;
+        }
+
+        this.DurabilityComponent.damage = this.maxDurability - durability;
+        this.updateItem();
+    }
+
+    /**
+     * Get the durability of the item
+     * @example
+     * const durability = itemData.getDurability();
+     * console.log(durability); // 100
+     * @returns {number}
+     */
+    public getDurability(): number {
+        if (!this.DurabilityComponent) {
+            debugWarn("getDurability", "Item does not have a durability component.");
+            return 0;
+        }
+
+        return this.maxDurability - this.DurabilityComponent.damage;
+    }
+
+    /**
+     * Set the damage of the item
+     * @param {number} damage - The damage to set
+     * @example
+     * itemData.setDamage(100); // Will have 100 less hits
+     * @returns {void}
+     */
+    public setDamage(damage: number): void {
+        if (!this.DurabilityComponent) {
+            debugWarn("setDamage", "Item does not have a durability component.");
+            return;
+        }
+
+        this.DurabilityComponent.damage = damage;
+        this.updateItem();
+    }
+
+    /**
+     * Get the damage of the item
+     * @example
+     * const damage = itemData.getDamage();
+     * console.log(damage); // 100
+     * @returns {number}
+     */
+    public getDamage(): number {
+        if (!this.DurabilityComponent) {
+            debugWarn("getDamage", "Item does not have a durability component.");
+            return 0;
+        }
+
+        return this.DurabilityComponent.damage;
+    }
+
+    /**
+     * Add damage to the item
+     * @param {number} damage - The damage to add
+     * @example
+     * itemData.addDamage(100); // Will have 100 more hits
+     * @returns {void}
+     */
+    public addDamage(damage: number): void {
+        if (!this.DurabilityComponent) {
+            debugWarn("addDamage", "Item does not have a durability component.");
+            return;
+        }
+
+        this.DurabilityComponent.damage += damage;
+        this.updateItem();
+    }
+
+    /**
+     * Repair the item, sets the durability to the max durability
+     * @example
+     * itemData.repairItem();
+     * @returns {void}
+     */
+    public repairItem(): void {this.setDurability(0);}
+
+
     // Dynamic property functions
     /**
      * Update the item, this is required after setting dynamic properties
      * @returns 
      * @example 
-     * this.addCustomLore("This is a line of custom lore", "LoreCategory");
-     * this.updateLore(); 
+     * this.setDynamicProperty("playerStats", { health: 20, attack: 10 });
+     * this.updateItem();
      * // When you get the item, it returns a copy of the item, so you need to update the item in the player's inventory
      */
     public updateItem(): void {
