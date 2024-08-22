@@ -516,7 +516,7 @@
 								"collection_name": "form_buttons",
 								"layer": 1
 							}
-						},
+						},	
 						{
 							"inventory_text": {
 								"type": "label",

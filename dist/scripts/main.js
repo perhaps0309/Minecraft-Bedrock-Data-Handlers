@@ -2143,9 +2143,6 @@ var ChestFormData = class {
    * @returns The ChestFormData instance.
    */
   button(slot, itemName = "", itemDesc = [], texture = "", stackAmount = 1, enchanted = false) {
-    if (slot < 0 || slot >= this.slotCount) {
-      throw new Error(`Slot index out of bounds. Valid range: 0 - ${this.slotCount - 1}`);
-    }
     const ID = typeIdToDataId.get(texture) ?? typeIdToID.get(texture);
     const itemText = `stack#${Math.min(Math.max(stackAmount, 1), 99).toString().padStart(2, "0")}\xA7r${itemName}\xA7r${itemDesc.length ? `
 \xA7r${itemDesc.join("\n\xA7r")}` : ""}`;
@@ -2198,6 +2195,9 @@ function showCustomChestUI(player) {
       "x_______x",
       "x_______x",
       "x_______x",
+      "axxxxxxxb",
+      "axxxxxxxb",
+      "axxxxxxxb",
       "axxxxxxxb"
     ],
     {

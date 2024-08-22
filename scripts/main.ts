@@ -17,6 +17,9 @@ function showCustomChestUI(player: Player): void {
             'x_______x',
             'x_______x',
             'axxxxxxxb',
+            'axxxxxxxb',
+            'axxxxxxxb',
+            'axxxxxxxb',
         ],
         {
             x: { itemName: '', itemDesc: [], texture: 'minecraft:stained_glass_pane', stackAmount: 1, enchanted: false },
@@ -24,6 +27,7 @@ function showCustomChestUI(player: Player): void {
             b: { itemName: 'Next Page', itemDesc: [], texture: 'minecraft:arrow', stackAmount: 1, enchanted: false }
         }
     );
+
 
     function showUI() {
         chestUI.show(player).then(response => {

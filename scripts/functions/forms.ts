@@ -85,9 +85,9 @@ export class ChestFormData {
     stackAmount: number = 1,
     enchanted: boolean = false
   ): this {
-    if (slot < 0 || slot >= this.slotCount) {
-      throw new Error(`Slot index out of bounds. Valid range: 0 - ${this.slotCount - 1}`);
-    }
+    //if (slot < 0 || slot >= this.slotCount) {
+      //throw new Error(`Slot index out of bounds. Valid range: 0 - ${this.slotCount - 1}`);
+    //}
 
     const ID = typeIdToDataId.get(texture) ?? typeIdToID.get(texture);
     const itemText = `stack#${Math.min(Math.max(stackAmount, 1), 99)
