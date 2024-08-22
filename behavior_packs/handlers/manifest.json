@@ -1,0 +1,50 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Data Handlers v1.01a",
+    "description": "A collection of data handlers",
+    "uuid": "82a10fb9-0818-4c8b-96f8-3dd2288080f2",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      50
+    ]
+  },
+  "modules": [
+    {
+      "description": "Data Handlers",
+      "language": "javascript",
+      "type": "script",
+      "uuid": "2d87a8d4-0aaf-4218-b22a-15e06d03d1e4",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "986a7693-af58-4593-87e7-cb6d62599e1b",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.14.0-beta"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "1.3.0-beta"
+    }
+  ]
+}

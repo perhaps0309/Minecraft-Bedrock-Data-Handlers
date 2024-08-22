@@ -1,5 +1,13 @@
 ## **Minecraft Bedrock Data Handlers**
 
+## Credits
+
+- [Herobrine643928](https://github.com/Herobrine643928)
+  - Base Chest UI
+- [perhaps0309](https://github.com/perhaps0309)
+  - Created handlers :3
+- [Parritz](https://github.com/parritz)
+
 ### **Overview**
 Welcome to the **Minecraft Bedrock Addon Data Handlers** library! This package offers a powerful set of tools to manage player, item, and world data in your Minecraft Bedrock addons. With a simple and intuitive API, developers can easily integrate complex data handling capabilities into their custom Minecraft Bedrock projects.
 

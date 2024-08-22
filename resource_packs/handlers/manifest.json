@@ -1,0 +1,40 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Data Handlers Resource Pack",
+    "description": "handler rp",
+    "uuid": "7485e038-5aac-48cc-b7f8-c678984826a9",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "description": "Data RP",
+      "type": "resources",
+      "uuid": "6793ac91-3851-4106-ae84-f9b7b8d75d1d",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "00a9cd0a-f583-4177-a381-2bde9847a358",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}
