@@ -8,42 +8,17 @@ export type BlockDataT = {
     maxAmount: number;
 }
 
-export type EffectDataT = {
-    effect: string;
-    duration: number;
-    strength: number;
-    title: string;
-    startTime: number;
-    displaying: boolean;
-    lastDisplayTime: number;
-    applied: boolean;
-    [key: string]: MinecraftDynamicPropertyT;
-}
-
-export type EnchantmentDataT = {
-    name: string;
-    level: number;
-    [key: string]: any;
-}
-
+export type EffectDataT = {} // TODO: Implement this type
 export type ItemEffectDataT = {
     name: string;
     level: number;
     [key: string]: any;
 }
 
-export type EnchantmentPurchaseT = {
+export type EnchantmentDataT = {
     name: string;
-    title: string;
-    description: string;
-    baseCost: number;
-    effectTitle: string; // "more damage", "more drops",
-    effectType: string; // "percent", "flat"
-    effectAmount: number;
-    effectSymbol?: string;
-    maxLevel?: number;
-    applicable?: string[]; // "pickaxe", "axe", "shovel", "sword", "bow", "armor", "tool", "hoe"
-    rarity: string; // "common", "uncommon", "rare", "epic", "legendary"
+    level: number;
+    [key: string]: any;
 }
 
 export type PlotT = {

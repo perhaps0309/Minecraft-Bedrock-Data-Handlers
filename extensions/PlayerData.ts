@@ -8,13 +8,21 @@ function debugWarn(functionName: string, message: string, errorStack?: string) {
 export class PlayerData {
     Player: Player;
 
-    public playerAlive: boolean = true;
     public InventoryComponent: EntityInventoryComponent | undefined;
     public EquippableComponent: EntityEquippableComponent | undefined;
+
+    private newPlayer: boolean = false;
+    private playerAlive: boolean = true;
+    readonly tagPrefix: string = "-datahandler"; // Used to identify the player's datahandler tag, added at the end of any tags
     constructor(player: Player) {
         this.Player = player;
         this.InventoryComponent = this.Player.getComponent("minecraft:inventory") as EntityInventoryComponent | undefined;
         this.EquippableComponent = this.Player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent | undefined;
+
+        if (!this.hasTag("hasJoined")) {
+            this.newPlayer = true;
+            this.addTag("hasJoined");
+        }
 
         const playerSpawn = (event: EntityLoadAfterEvent) => {
             if (event.entity === this.Player) {
@@ -131,4 +139,26 @@ export class PlayerData {
 
         return foundItemStack;
     }
+
+    // Tag handlers
+
+    public addTag(tag: string) {
+        this.Player.addTag(tag + this.tagPrefix);
+    }
+
+    public removeTag(tag: string) {
+        this.Player.removeTag(tag + this.tagPrefix);
+    }
+
+    public hasTag(tag: string) {
+        return this.Player.hasTag(tag + this.tagPrefix);
+    }
+
+    public getTags() {
+        return this.Player.getTags().filter(tag => tag.includes(this.tagPrefix));
+    }
+
+    // Custom getters
+    public isAlive() {return this.playerAlive;}
+    public isNewPlayer() {return this.newPlayer;}
 }

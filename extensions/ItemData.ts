@@ -1,29 +1,12 @@
 import { Enchantment, EnchantmentType, EntityAttributeComponent, EntityComponentTypes, EntityEquippableComponent, EntityInventoryComponent, EquipmentSlot, ItemComponentTypes, ItemDurabilityComponent, ItemEnchantableComponent, ItemStack, Player, Vector3, world } from "@minecraft/server";
 import { EffectDataT, EnchantmentDataT, ItemEffectDataT } from "../types"; // Use our custom types
 import { MinecraftFormatCodes, removeFormat } from "./ChatFormat"
-import { ItemEffects } from "./ItemEffects";
-import { EnchantmentTitles } from "./EnchantmentTitles";
+import { ItemEffects } from "../titles/ItemEffects";
+import { EnchantmentTitles } from "../titles/EnchantmentTitles";
+import { safeJsonParser, safeJsonStringify } from "../functions/json";
 
-function debugWarn(functionName: string, message: string) {
-    console.warn(`[ItemData.${functionName}] ${message}`);
-}
-
-// Tries to parse the value as JSON data, and if it it fails, then returns the original data.
-function safeJsonParser(value: string | boolean | number | Vector3 | undefined) {
-    try {
-        value = JSON.parse(value as string);
-    } catch (err) { }
-    return value;
-}
-
-// Tries to stringify JSON data, and if it fails, then returns the original data.
-function safeJsonStringify(value: any) {
-    // If the value is an object, then stringify it.
-    // Otherwise, return the original value.
-    if (typeof value === "object") {
-        value = JSON.stringify(value)
-    }
-    return value;
+function debugWarn(functionName: string, message: string, errorStack?: string) {
+    console.warn(`[PlayerData.${functionName}] ${message} [${errorStack || "No stack provided."}]`);
 }
 
 export class ItemData {
@@ -42,17 +25,13 @@ export class ItemData {
 
         const itemEnchantments = this.item.getComponent(ItemComponentTypes.Enchantable) as ItemEnchantableComponent;
         const durabilityComponent = this.item.getComponent("durability") as ItemDurabilityComponent;
-        const attributeComponent = this.item.getComponent("minecraft:attribute_modifiers") as EntityAttributeComponent;
-        attributeComponent.setCurrentValue
 		if (durabilityComponent) { 
             durabilityComponent.damage = 0;
             this.maxDurability = durabilityComponent.maxDurability;
 			this.DurabilityComponent = durabilityComponent;
 		}
         
-        if (itemEnchantments) {
-            this.EnchantableComponent = itemEnchantments;
-        }
+        if (itemEnchantments) {this.EnchantableComponent = itemEnchantments;}
     }
 
     /**
@@ -90,8 +69,7 @@ export class ItemData {
     // Lore functions
     /**
      * Get the lore of the item, returns an array of strings
-     * @example
-     * const lore = itemData.getLore();
+     * @example const lore = itemData.getLore();
      * console.log(lore);
      * // ["This is a line of lore", "This is another line of lore"]
      * @returns {string[]}
@@ -103,8 +81,7 @@ export class ItemData {
     /**
      * Set the lore of the item
      * @param {string[]} lore - The lore to set
-     * @example
-     * itemData.setLore(["This is a line of lore", "This is another line of lore"]);
+     * @example itemData.setLore(["This is a line of lore", "This is another line of lore"]);
      */
     public setLore(lore: string[]): void {
         this.item.setLore(lore);
@@ -643,5 +620,6 @@ export class ItemData {
 
 // Usage:
 //import { ItemData } from "./extensions/ItemData";
-//const player = world.getAllPlayers()[0];
-//const itemData = new ItemData(new ItemStack("minecraft:diamond_sword", 1), player, EquipmentSlot.Mainhand);
+const player = world.getAllPlayers()[0];
+const itemData = new ItemData(new ItemStack("minecraft:diamond_sword", 1), player, EquipmentSlot.Mainhand);
+itemData.repairItem();
