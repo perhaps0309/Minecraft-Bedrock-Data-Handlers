@@ -2190,16 +2190,20 @@ var ChestFormData = class {
 // scripts/main.ts
 import { FormCancelationReason } from "@minecraft/server-ui";
 function showCustomChestUI(player) {
-  const chestUI = new ChestFormData("27" /* SIZE_27 */).title("Custom Chest UI").button(0, "Diamond Sword", ["A powerful weapon"], "minecraft:diamond_sword", 1, true).button(1, "Golden Apple", ["A special item"], "minecraft:golden_apple", 5).button(2, "Iron Helmet", ["Protects your head"], "minecraft:iron_helmet", 1, false);
+  const chestUI = new ChestFormData("54" /* SIZE_54 */).title("Custom Chest UI");
   chestUI.pattern(
     [
-      "xxx_____x",
+      "xxxxxxxxx",
       "x_______x",
-      "x___a___x"
+      "x_______x",
+      "x_______x",
+      "x_______x",
+      "axxxxxxxb"
     ],
     {
-      x: { itemName: "Stone", itemDesc: [], texture: "minecraft:stone", stackAmount: 64, enchanted: false },
-      a: { itemName: "Anvil", itemDesc: ["A very heavy block"], texture: "minecraft:anvil", stackAmount: 1, enchanted: false }
+      x: { itemName: "", itemDesc: [], texture: "minecraft:stained_glass_pane", stackAmount: 1, enchanted: false },
+      a: { itemName: "Previous Page", itemDesc: [], texture: "minecraft:arrow", stackAmount: 1, enchanted: false },
+      b: { itemName: "Next Page", itemDesc: [], texture: "minecraft:arrow", stackAmount: 1, enchanted: false }
     }
   );
   function showUI() {

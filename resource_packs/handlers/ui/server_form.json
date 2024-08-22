@@ -64,7 +64,6 @@
 		],
 		"force_render_below": true,
 		"low_frequency_rendering": true,
-		"load_screen_immediately": true,
 		"render_only_when_topmost": false,
 		"render_game_behind": true,
 		"button_mappings": [

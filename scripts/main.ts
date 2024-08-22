@@ -4,23 +4,24 @@ import { ChestFormData, ChestSize } from "./functions/forms";
 import { FormCancelationReason } from "@minecraft/server-ui";
 
 function showCustomChestUI(player: Player): void {
-    // Create a new ChestFormData instance with a size of 27 slots
-    const chestUI = new ChestFormData(ChestSize.SIZE_27)
+    // Create a new ChestFormData instance with a size of 54 slots
+    const chestUI = new ChestFormData(ChestSize.SIZE_54)
         .title("Custom Chest UI")  // Set the title of the chest UI
-        .button(0, "Diamond Sword", ["A powerful weapon"], "minecraft:diamond_sword", 1, true)  // Add a diamond sword with enchantment
-        .button(1, "Golden Apple", ["A special item"], "minecraft:golden_apple", 5)  // Add a stack of 5 golden apples
-        .button(2, "Iron Helmet", ["Protects your head"], "minecraft:iron_helmet", 1, false);  // Add an iron helmet without enchantment
 
-    // Use the pattern method to create a specific layout for items
+    // Create a basic layout for an auction house chest UI with glass panes and pages
     chestUI.pattern(
         [
-            'xxx_____x', 
+            'xxxxxxxxx',
             'x_______x',
-            'x___a___x',
-        ], 
+            'x_______x',
+            'x_______x',
+            'x_______x',
+            'axxxxxxxb',
+        ],
         {
-            x: { itemName: 'Stone', itemDesc: [], texture: 'minecraft:stone', stackAmount: 64, enchanted: false },
-            a: { itemName: 'Anvil', itemDesc: ['A very heavy block'], texture: 'minecraft:anvil', stackAmount: 1, enchanted: false },
+            x: { itemName: '', itemDesc: [], texture: 'minecraft:stained_glass_pane', stackAmount: 1, enchanted: false },
+            a: { itemName: 'Previous Page', itemDesc: [], texture: 'minecraft:arrow', stackAmount: 1, enchanted: false },
+            b: { itemName: 'Next Page', itemDesc: [], texture: 'minecraft:arrow', stackAmount: 1, enchanted: false }
         }
     );
 
