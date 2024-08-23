@@ -1,0 +1,33 @@
+{
+    "minimap_block": {
+        "type": "image",
+        "texture": "textures/ui/minimaptest", 
+        "anchor_from": "top_left",
+        "anchor_to": "top_left",
+        "size": [ 2, 2 ],
+        "offset": [ 0, 0 ]
+    },
+
+    "minimap_border": {
+        "type": "image",
+        "texture": "textures/ui/minimap", 
+        "anchor_from": "top_right",
+        "anchor_to": "top_right",
+        "size": [ 64, 64 ],
+        "offset": [ -8, 8 ],
+        "controls": [
+            { "minimap_block@hud.minimap_block": {} }
+        ]
+    },
+    "root_panel": {
+        "modifications": [
+            {
+                "array_name": "controls",
+                "operation": "insert_front",
+                "value": [
+                    { "minimap_border@hud.minimap_border": {} }
+                ]
+            }
+        ]
+    }
+}

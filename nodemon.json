@@ -1,5 +1,5 @@
 {
   "watch": ["scripts", "behavior_packs/**/*", "resource_packs/**/*"],
-  "ext": "ts,d.ts",
+  "ext": "ts,d.ts,json,png",
   "exec": "npm run local-deploy"
 }
