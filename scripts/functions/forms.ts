@@ -136,6 +136,8 @@ export class ChestFormData {
     this.buttonArray.forEach(([text, iconPath]) => {
       form.button(text, iconPath?.toString());
     });
+
+    // @ts-ignore
     return form.show(player);
   }
 }
