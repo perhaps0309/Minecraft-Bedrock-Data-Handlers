@@ -36,13 +36,5 @@
         0
       ]
     }
-  ],
-  "capabilities": {
-    "experimental_custom_ui": true
-  },
-  "metadata": {
-        "authors": ["perhaps0309"],
-        "license": "MIT",
-        "url": "https://github.com/perhaps0309/Minecraft-Bedrock-Data-Handlers"
-    }
+  ]
 }
