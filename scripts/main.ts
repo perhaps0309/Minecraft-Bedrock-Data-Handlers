@@ -1,7 +1,12 @@
-import { world, system, ItemStack, Player } from "@minecraft/server";
+import { world, system, ItemStack, Player, EquipmentSlot } from "@minecraft/server";
 import { PlayerData } from "./extensions/PlayerData";
+import { ItemData } from "./extensions/ItemData";
+import { WorldData } from "./extensions/WorldData";
+import { chatServer, chatError, chatSuccess, chatWarn, removeFormat, MinecraftColors, MinecraftFormatCodes } from "./extensions/ChatFormat";
+
 import { ChestFormData, ChestSize } from "./functions/forms";
 import { FormCancelationReason } from "@minecraft/server-ui";
+import { SubscriptionHandler } from "./extensions/SubscriptionHandler";
 
 function showCustomChestUI(player: Player): void {
     // Create a new ChestFormData instance with a size of 54 slots
@@ -44,7 +49,26 @@ function showCustomChestUI(player: Player): void {
     showUI();
 }
 
-
+WorldData.setDynamicProperty('perhaps0309', 'was here! :)');
 world.afterEvents.playerSpawn.subscribe((event) => {
+    let playerData = new PlayerData(event.player);
+    let itemData = new ItemData(new ItemStack('minecraft:diamond_sword', 1), event.player);
+    playerData.setMainhand(itemData.item)
+    itemData.slot = EquipmentSlot.Mainhand;
+
     showCustomChestUI(event.player);
+    chatSuccess(event.player, "Welcome to the server!");
 });
+
+// Example Usage:
+// Creating an instance of the SubscriptionHandler
+const subHandler = new SubscriptionHandler();
+
+// Subscribing to an event using world.afterEvents.playerSpawn
+const subId1 = subHandler.subscribe('playerSpawn', world.afterEvents.playerSpawn, (eventData) => {
+    console.warn(`Player ${eventData.player.name} has spawned!`);
+    eventData.player.sendMessage("Welcome to the server!");
+});
+
+
+subHandler.unsubscribeById('playerSpawn', subId1); // Unsubscribing from the event using the unique ID

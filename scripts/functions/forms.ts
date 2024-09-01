@@ -112,17 +112,23 @@ export class ChestFormData {
     pattern: string[],
     key: { [key: string]: { itemName?: string; itemDesc?: string[]; stackAmount?: number; enchanted?: boolean; texture: string } }
   ): this {
-    pattern.forEach((row, rowIndex) => {
-      [...row].forEach((char, colIndex) => {
+    const slotCount = this.slotCount;
+    const numRows = pattern.length;
+    const numCols = 9; // Assuming the UI has 9 columns
+
+    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+      const row = pattern[rowIndex];
+      for (let colIndex = 0; colIndex < row.length; colIndex++) {
+        const char = row[colIndex];
         const data = key[char];
-        if (data) {
-          const slot = colIndex + rowIndex * 9;
-          if (slot < this.slotCount) {
-            this.button(slot, data.itemName, data.itemDesc, data.texture, data.stackAmount, data.enchanted);
-          }
+        const slot = colIndex + rowIndex * numCols;
+
+        if (data && slot < slotCount) {
+          this.button(slot, data.itemName, data.itemDesc, data.texture, data.stackAmount, data.enchanted);
         }
-      });
-    });
+      }
+    }
+
     return this;
   }
 

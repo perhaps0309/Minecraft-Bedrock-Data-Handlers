@@ -1,11 +1,13 @@
 import { world, Player, Vector3, EntityComponentTypes, EntityEquippableComponent, EquipmentSlot, Effect, EffectType, EntityEffectOptions, EffectTypes, EntityInventoryComponent, EntityLoadAfterEvent, ItemStack, PlayerLeaveAfterEvent } from "@minecraft/server";
 import { safeJsonParser, safeJsonStringify } from "../functions/json";
+import { PlayerSubscriptionRegistry, SubscriptionHandler, PlayerSubscriptionHandler } from "./SubscriptionHandler";
 
 function debugWarn(functionName: string, message: string, errorStack?: string) {
     console.warn(`[PlayerData.${functionName}] ${message} [${errorStack || "No stack provided."}]`);
 }
 
 export class PlayerData {
+    private subscriptionHandler: SubscriptionHandler;
     Player: Player;
 
     public InventoryComponent: EntityInventoryComponent | undefined;
@@ -14,7 +16,7 @@ export class PlayerData {
     private newPlayer: boolean = false;
     private playerLeft: boolean = false;
     private playerAlive: boolean = true;
-    readonly tagPrefix: string = "-datahandler"; // Used to identify the player's datahandler tag, added at the end of any tags
+    readonly tagPrefix: string = "datahandler:"; // Used to identify the player's datahandler tag, added at the end of any tags
     constructor(player: Player) {
         this.Player = player;
         this.InventoryComponent = this.Player.getComponent("minecraft:inventory") as EntityInventoryComponent | undefined;
@@ -25,24 +27,27 @@ export class PlayerData {
             this.addTag("hasJoined");
         }
 
-        const playerSpawn = (event: EntityLoadAfterEvent) => {
-            if (event.entity === this.Player) {
-                this.InventoryComponent = this.Player.getComponent("minecraft:inventory") as EntityInventoryComponent;
-                this.EquippableComponent = this.Player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent;
-            }
-        }
+        const registry = PlayerSubscriptionRegistry.getInstance();
+        this.subscriptionHandler = registry.register(player);
 
-        const playerLeave = (event: PlayerLeaveAfterEvent) => {
-            if (event.playerId === this.Player.id) {
-                this.playerAlive = false;
-                this.playerLeft = true;
-                world.afterEvents.entitySpawn.unsubscribe(playerSpawn);
-                world.afterEvents.playerLeave.unsubscribe(playerLeave);
-            }
-        }
+        this.subscriptionHandler.subscribe("entitySpawn", world.afterEvents.entitySpawn, this.handleEntitySpawn.bind(this));
+        this.subscriptionHandler.subscribe("playerLeave", world.afterEvents.playerLeave, this.handlePlayerLeave.bind(this));
+    }
 
-        world.afterEvents.entitySpawn.subscribe(playerSpawn);
-        world.afterEvents.playerLeave.subscribe(playerLeave);
+    private handleEntitySpawn(event: EntityLoadAfterEvent) {
+        if (event.entity === this.Player) {
+            this.InventoryComponent = this.Player.getComponent("minecraft:inventory") as EntityInventoryComponent;
+            this.EquippableComponent = this.Player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent;
+        }
+    }
+
+    private handlePlayerLeave(event: PlayerLeaveAfterEvent) {
+        if (event.playerId === this.Player.id) {
+            this.playerAlive = false;
+            this.playerLeft = true;
+            world.afterEvents.entitySpawn.unsubscribe(this.handleEntitySpawn);
+            world.afterEvents.playerLeave.unsubscribe(this.handlePlayerLeave);
+        }
     }
 
     public getDynamicProperty(key: string): any {
@@ -88,15 +93,27 @@ export class PlayerData {
         return this.InventoryComponent.container.addItem(itemStack);
     }
 
+    /**
+     * 
+     * @returns { EntityEquippableComponent | void } Returns the player's EquippableComponent, or undefined if the EquippableComponent is not found.
+     */
     public getEquippable() { // TODO: Implement properly refreshing the EquippableComponent if needed(need to check in game, if it needs to be updated after death)
         if (!this.EquippableComponent) {
             debugWarn("getEquippable", "failed to fetch EquippableComponent", new Error().stack);
             return;
         }
 
-        return this.Player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent; 
+        return this.EquippableComponent;
     }
 
+    /**
+     * @returns {ItemStack | void} Returns the player's armor as an object with the armor slots as keys, or undefined if the EquippableComponent is not found.
+     * @example
+     * let playerArmor = playerData.getArmor();
+     * if (playerArmor) {
+     *  debugWarn("getArmor", `Player has armor; ${playerArmor.Head}`);
+     * }
+     */
     public getArmor() {
         let equippable = this.getEquippable();
         if (!equippable) return debugWarn("getArmor", "failed to fetch EquippableComponent", new Error().stack);
@@ -115,6 +132,49 @@ export class PlayerData {
 
         return equippable.getEquipment(EquipmentSlot.Mainhand);
     }
+
+    public setMainhand(itemStack: ItemStack) {
+        this.equipItem(EquipmentSlot.Mainhand, itemStack);
+    }
+
+    public getOffhand() {
+        const equippable = this.getEquippable();
+        if (!equippable) return debugWarn("getOffhand", "failed to fetch EquippableComponent", new Error().stack);
+        return equippable.getEquipment(EquipmentSlot.Offhand);
+    }
+
+    public setOffhand(itemStack: ItemStack) {
+        this.equipItem(EquipmentSlot.Offhand, itemStack);
+    }
+
+    public equipItem(slot: EquipmentSlot, itemStack: ItemStack) {
+        const equippable = this.getEquippable();
+        if (!equippable) return debugWarn("equipItem", "failed to fetch EquippableComponent", new Error().stack);
+        const currentItem = equippable.getEquipment(slot);
+        
+        if (currentItem && currentItem.typeId !== "minecraft:air") {
+            if (!this.moveItemToInventory(currentItem)) {
+                this.dropItem(currentItem);
+            }
+        }
+
+        equippable.setEquipment(slot, itemStack);
+    }
+
+    private moveItemToInventory(itemStack: ItemStack): boolean {
+        if (!this.InventoryComponent || !this.InventoryComponent.container) {
+            debugWarn("moveItemToInventory", "failed to fetch InventoryComponent or container", new Error().stack);
+            return false;
+        }
+
+        const result = this.InventoryComponent.container.addItem(itemStack);
+        return result === undefined;
+    }
+
+    private dropItem(itemStack: ItemStack) {
+        this.Player.dimension.spawnItem(itemStack, this.Player.location);
+    }
+
 
     /**
      * Searches the players inventory for an ItemStack and returns the index of the item if found.

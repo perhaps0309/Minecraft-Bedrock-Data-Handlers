@@ -534,17 +534,16 @@ export class ItemData {
      */
     public updateItem(): void {
         if (this.slot === undefined) return;
+
+        const inventory = this.player.getComponent(EntityComponentTypes.Inventory) as EntityInventoryComponent;
+        const container = inventory?.container;
+        const playerEquipment = this.player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent;
+
+        if (!container || !playerEquipment) return;
+
         if (typeof this.slot === "number") {
-            const inventory = this.player.getComponent("minecraft:inventory") as EntityInventoryComponent;
-            const container = inventory.container;
-
-            // Check if the player has an inventory
-            if (!container) return;
-
-            // Update the item in the player's inventory
             container.setItem(this.slot, this.item);
         } else {
-            const playerEquipment = this.player.getComponent(EntityComponentTypes.Equippable) as EntityEquippableComponent
             playerEquipment.setEquipment(this.slot, this.item);
         }
     }
@@ -617,9 +616,3 @@ export class ItemData {
         this.updateItem();
     }
 }
-
-// Usage:
-//import { ItemData } from "./extensions/ItemData";
-const player = world.getAllPlayers()[0];
-const itemData = new ItemData(new ItemStack("minecraft:diamond_sword", 1), player, EquipmentSlot.Mainhand);
-itemData.repairItem();
