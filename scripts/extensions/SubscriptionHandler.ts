@@ -15,6 +15,7 @@ type PeriodicSubscription = {
     subscriptionName: string, 
     interval: number, 
     callback: (status: boolean) => void
+    onUpdate?: boolean // Optional flag is used to determine if the callback should be called upon update vs interval
 };
 
 export class SubscriptionHandler {
@@ -50,15 +51,19 @@ export class SubscriptionHandler {
      * @param callback - The function to call when the event triggers.
      * @returns The unique ID of the subscription.
      */
-    subscribePeriodic(eventClass: { [key: string]: any }, eventType: string, subscriptionName: string, interval: number, callback: (status: boolean) => void) { // interval is in ticks
+    subscribePeriodic(eventClass: { [key: string]: any }, eventType: string, subscriptionName: string, interval: number, callback: (status: boolean) => void, onUpdate?: boolean) { // interval is in ticks
         const id = this.generateUniqueId();
     
         if (!this.periodicSubscriptions[subscriptionName]) {
             this.periodicSubscriptions[subscriptionName] = [];
         }
-    
+        
+        let previousState = eventClass[eventType];
         const intervalSubscription = system.runInterval(() => {
-            callback(eventClass[eventType]);
+            let state = eventClass[eventType]
+            if (onUpdate && state === previousState) return;
+            
+            callback(state);
         }, interval)
 
         this.periodicSubscriptions[subscriptionName].push({ 
