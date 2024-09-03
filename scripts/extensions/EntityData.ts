@@ -12,8 +12,6 @@ export class EntityData {
         this.entity = entity;
 
         this.subscriptionHandler = new SubscriptionHandler();
-        this.subscriptionHandler.subscribe("entitySpawn", world.afterEvents.entitySpawn, this.handleEntitySpawn.bind(this));
-        this.subscriptionHandler.subscribe("entityDeath", world.afterEvents.entityDie, this.handleEntityDeath.bind(this));
     }
 
     // Placeholder for additional methods
