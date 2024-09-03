@@ -7,7 +7,7 @@ function debugWarn(functionName: string, message: string, errorStack?: string) {
 }
 
 export class PlayerData {
-    private subscriptionHandler: SubscriptionHandler;
+    public subscriptionHandler: SubscriptionHandler;
     Player: Player;
 
     public InventoryComponent: EntityInventoryComponent | undefined;
@@ -45,8 +45,6 @@ export class PlayerData {
         if (event.playerId === this.Player.id) {
             this.playerAlive = false;
             this.playerLeft = true;
-            world.afterEvents.entitySpawn.unsubscribe(this.handleEntitySpawn);
-            world.afterEvents.playerLeave.unsubscribe(this.handlePlayerLeave);
         }
     }
 

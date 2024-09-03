@@ -1,4 +1,4 @@
-import { Player, PlayerLeaveAfterEvent, world } from "@minecraft/server";
+import { Player, PlayerLeaveAfterEvent, system, world } from "@minecraft/server";
 
 type Subscription<T> = {
     id: string;
@@ -7,8 +7,19 @@ type Subscription<T> = {
     subscription: any;
 };
 
+type PeriodicSubscription = {
+    id: string,
+    eventClass: { [key: string]: any },
+    eventType: string, 
+    subscription: number,
+    subscriptionName: string, 
+    interval: number, 
+    callback: (status: boolean) => void
+};
+
 export class SubscriptionHandler {
     private subscriptions: { [name: string]: Subscription<any>[] } = {};
+    private periodicSubscriptions: { [name: string]: PeriodicSubscription[] } = {};
 
     /**
      * Subscribes to an event and stores it with a unique ID under the given name.
@@ -31,6 +42,37 @@ export class SubscriptionHandler {
     }
 
     /**
+     * Subscribes to an event that triggers periodically.
+     * @param eventClass - The event class to subscribe to (e.g., world).
+     * @param eventType - The type of event to subscribe to.
+     * @param subscriptionName - The name of the subscription group.
+     * @param interval - The interval in seconds to check for the event.
+     * @param callback - The function to call when the event triggers.
+     * @returns The unique ID of the subscription.
+     */
+    subscribePeriodic(eventClass: { [key: string]: any }, eventType: string, subscriptionName: string, interval: number, callback: (status: boolean) => void) { // interval is in ticks
+        const id = this.generateUniqueId();
+    
+        if (!this.periodicSubscriptions[subscriptionName]) {
+            this.periodicSubscriptions[subscriptionName] = [];
+        }
+    
+        const intervalSubscription = system.runInterval(() => {
+            callback(eventClass[eventType]);
+        }, interval)
+
+        this.periodicSubscriptions[subscriptionName].push({ 
+            id,
+            eventClass, 
+            eventType, 
+            subscription: intervalSubscription, 
+            subscriptionName, 
+            interval, 
+            callback 
+        });
+    }
+
+    /**
      * Unsubscribes from a specific subscription using its unique ID.
      * @param name - The name of the subscription group.
      * @param id - The unique ID of the subscription to remove.
@@ -40,10 +82,16 @@ export class SubscriptionHandler {
         if (!this.subscriptions[name]) return false;
 
         const index = this.subscriptions[name].findIndex(sub => sub.id === id);
-        if (index === -1) return false;
+        const index2 = this.periodicSubscriptions[name].findIndex(sub => sub.id === id);
+        if (index === -1 && index2 === -1) return false;
 
-        this.subscriptions[name][index].eventClass.unsubscribe(this.subscriptions[name][index].subscription);
-        this.subscriptions[name].splice(index, 1);
+        if (index !== -1) {
+            this.subscriptions[name][index].eventClass.unsubscribe(this.subscriptions[name][index].subscription);
+            this.subscriptions[name].splice(index, 1);
+        } else {
+            system.clearRun(this.periodicSubscriptions[name][index2].subscription);
+            this.periodicSubscriptions[name].splice(index2, 1);
+        }
 
         return true;
     }
@@ -54,10 +102,14 @@ export class SubscriptionHandler {
      * @returns True if subscriptions were found and removed, false otherwise.
      */
     unsubscribeAll(name: string): boolean {
-        if (!this.subscriptions[name]) return false;
+        if (!this.subscriptions[name] && !this.periodicSubscriptions[name]) return false;
 
         this.subscriptions[name].forEach(sub => sub.eventClass.unsubscribe(sub.subscription));
         delete this.subscriptions[name];
+
+        this.periodicSubscriptions[name].forEach(sub => system.clearRun(sub.subscription));
+        delete this.periodicSubscriptions[name];
+
         return true;
     }
 
@@ -89,6 +141,10 @@ export class PlayerSubscriptionHandler extends SubscriptionHandler {
         }
 
         return id;
+    }
+
+    subscribePeriodic(eventClass: { [key: string]: any; }, eventType: string, subscriptionName: string, interval: number, callback: (status: boolean) => void): void {
+        super.subscribePeriodic(eventClass, eventType, subscriptionName, interval, callback);
     }
 
     // Cleanup all subscriptions when the player leaves
