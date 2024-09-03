@@ -14,8 +14,34 @@ export class EntityData {
         this.subscriptionHandler = new SubscriptionHandler();
     }
 
-    // Placeholder for additional methods
-    // Additional methods for entity stacking, custom behaviors, and more...
+    private stackSize: number = 1;
+
+    /**
+     * Sets the stack size for the entity.
+     * @param size - The new stack size.
+     */
+    public setStackSize(size: number) {
+        if (size < 1) {
+            throw new Error("Stack size must be at least 1.");
+        }
+        this.stackSize = size;
+    }
+
+    /**
+     * Gets the current stack size of the entity.
+     * @returns The current stack size.
+     */
+    public getStackSize(): number {
+        return this.stackSize;
+    }
+
+    /**
+     * Custom behavior example: Make the entity perform a custom action.
+     */
+    public performCustomBehavior() {
+        // Implement custom behavior logic here
+        console.log(`Entity ${this.entity.id} is performing a custom behavior.`);
+    }
 
     public addEffect(effectType: EffectType, duration: number, amplifier: number) {
         this.entity.addEffect(effectType, duration);
