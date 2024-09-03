@@ -16,18 +16,8 @@ export class EntityData {
         this.subscriptionHandler.subscribe("entityDeath", world.afterEvents.entityDie, this.handleEntityDeath.bind(this));
     }
 
-    private handleEntitySpawn(event: EntitySpawnAfterEvent) {
-        if (event.entity.id === this.entity.id) {
-            // Initialize or update entity-specific data here
-        }
-    }
-
-    private handleEntityDeath(event: EntityDieAfterEvent) {
-        if (event.deadEntity.id === this.entity.id) {
-            this.isAlive = false;
-            // Handle death-related logic, such as removing from tracking or handling loot
-        }
-    }
+    // Placeholder for additional methods
+    // Additional methods for entity stacking, custom behaviors, and more...
 
     public addEffect(effectType: EffectType, duration: number, amplifier: number) {
         this.entity.addEffect(effectType, duration);
