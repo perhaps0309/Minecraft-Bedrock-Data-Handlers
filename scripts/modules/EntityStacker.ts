@@ -3,6 +3,7 @@
 const MODULE_VERSION = "v1.01a"
 const MODULE_NAME = "EntityStacker";
 const MODULE_COLOR = "§d";
+const MODULE_TAG = `${MODULE_NAME}:isProcessing` // Tag to prevent processing the same entity multiple times
 
 // * INTERFACE DEFINITIONS * \\
 
@@ -32,8 +33,8 @@ const EntityStacker: ModuleInterface = {
     MODULE_DEBUG: false,
     MODULE_SETTINGS: { 
         ENTITY_CHECK_INTERVAL: 20,
-        ENTITY_MAX_STACK_SIZE: 999,
-        ENTITY_RADIUS: 4,
+        ENTITY_MAX_STACK_SIZE: 99999,
+        ENTITY_RADIUS: 3,
         ENTITY_NAME: "§e[ §7x# @ §e]"
     }
 }
@@ -58,7 +59,11 @@ export function moduleInit() {
 
 // * MODULE CODE * \\
 
+
 import { Entity, world, system, Vector3, Dimension } from "@minecraft/server";
+import { settingsHandler } from "../extensions/SettingsHandler";
+
+settingsHandler.register("EntityStacker", EntityStacker.MODULE_SETTINGS);
 
 const blacklistedTypes = ["minecraft:item", "minecraft:player"];
 const trackedEntities = new Map<string, TrackedEntityData>();
@@ -76,19 +81,23 @@ interface TrackedEntityData {
     amount: number;
 }
 
-// Function to update the name tag of the stacked entity
+function abbreviateNumber(value: number): string { // Add commas to numbers
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function updateEntityNameTag(data: TrackedEntityData) {
     if (!data.entity.isValid()) {
         console.warn(`[EntityStacker] Attempted to update name tag for an invalid entity.`);
         return;
     }
 
-    const nameTag = ENTITY_NAME().replace("x#", `${data.amount}x`).replace("@", data.displayName);
+    const nameTag = ENTITY_NAME().replace("x#", `${abbreviateNumber(data.amount)}x`).replace("@", data.displayName);
     data.entity.nameTag = nameTag;
 }
 
 // Function to merge entities into a stack and update the main entity
 function mergeEntities(mainEntity: Entity, nearbyEntity: Entity, newStackAmount: number, displayName: string) {
+    nearbyEntity.remove();
     const trackedData: TrackedEntityData = {
         entity: mainEntity,
         displayName: displayName,
@@ -97,8 +106,23 @@ function mergeEntities(mainEntity: Entity, nearbyEntity: Entity, newStackAmount:
 
     trackedEntities.set(mainEntity.id, trackedData);
     updateEntityNameTag(trackedData);
+}
 
-    nearbyEntity.remove();
+function getBiggestEntityStack(entities: Entity[], referenceEntity: Entity): Entity | null {
+    let biggestEntity: Entity | null = null;
+    let biggestStackSize = 0;
+
+    for (const entity of entities) {
+        const entityData = trackedEntities.get(entity.id);
+        if (!entityData) continue;
+
+        if (entityData.amount > biggestStackSize && entity.id !== referenceEntity.id && entityData.amount < ENTITY_MAX_STACK_SIZE()) {
+            biggestEntity = entity;
+            biggestStackSize = entityData.amount;
+        }
+    }
+
+    return biggestEntity;
 }
 
 export function directSpawnEntity(dimension: Dimension, entity: string, location: Vector3) { // check for nearby entities to stack before spawning
@@ -133,10 +157,10 @@ world.afterEvents.entitySpawn.subscribe((event) => {
     if (!MODULE_ENABLED()) return;
 
     const entity = event.entity;
-    if (blacklistedTypes.includes(entity.typeId) || trackedEntities.has(entity.id) || !entity.isValid()) return;
+    if (blacklistedTypes.includes(entity.typeId) || trackedEntities.has(entity.id) || !entity.isValid() || entity.hasTag(MODULE_TAG)) return;
+    entity.addTag(MODULE_TAG);
 
     const entityId = entity.typeId;
-
     const nearbyEntities = entity.dimension.getEntities({
         type: entityId,
         maxDistance: ENTITY_RADIUS(),
@@ -144,16 +168,14 @@ world.afterEvents.entitySpawn.subscribe((event) => {
         excludeTypes: blacklistedTypes
     });
 
-    for (const nearbyEntity of nearbyEntities) {
-        if (nearbyEntity.id === entity.id) continue;
+    let biggestEntity = getBiggestEntityStack(nearbyEntities, entity);
+    if (biggestEntity) {
+        const trackedData = trackedEntities.get(biggestEntity.id);
+        if (!trackedData) return;
 
-        const stackSize = trackedEntities.get(nearbyEntity.id)?.amount || 1;
-        if (stackSize < ENTITY_MAX_STACK_SIZE()) {
-            const newStackAmount = stackSize + 1; // Add the current entity to the stack
-            const displayName = entityId.split(":")[1].replace(/[_-]/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-            mergeEntities(nearbyEntity, entity, newStackAmount, displayName);
-            return; // Merge with the first valid stack and exit
-        }
+        const newStackAmount = trackedData.amount + 1;
+        mergeEntities(biggestEntity, entity, newStackAmount, trackedData.displayName);
+        return;
     }
 
     // If no stack was found, this entity becomes the primary
@@ -163,6 +185,8 @@ world.afterEvents.entitySpawn.subscribe((event) => {
         displayName: displayName,
         amount: 1,
     });
+
+    entity.removeTag(MODULE_TAG);
 });
 
 // Handle entity hurt and respawn with remaining stack
@@ -212,6 +236,9 @@ system.runInterval(() => {
             return;
         }
 
+        if (entity.hasTag(MODULE_TAG)) return;
+        entity.addTag(MODULE_TAG);
+
         // Check for nearby entities to stack
         const nearbyEntities = entity.dimension.getEntities({
             type: entity.typeId,
@@ -227,11 +254,13 @@ system.runInterval(() => {
             if (stackSize + data.amount < ENTITY_MAX_STACK_SIZE()) {
                 const newStackAmount = stackSize + data.amount;
                 mergeEntities(entity, nearbyEntity, newStackAmount, data.displayName);
+                entity.removeTag(MODULE_TAG);
                 return;
             }
         }
 
         // Update name tags for all valid entities
         updateEntityNameTag(data);
+        entity.removeTag(MODULE_TAG);
     });
 }, ENTITY_CHECK_INTERVAL());

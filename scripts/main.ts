@@ -13,6 +13,7 @@ ItemStacker.MODULE_ENABLED = true;
 ItemStacker.MODULE_INIT();
 
 import EntityStacker from "./modules/EntityStacker";
+import { commandHandler } from "./extensions/CommandHandler";
 EntityStacker.MODULE_ENABLED = true;
 EntityStacker.MODULE_INIT();
 

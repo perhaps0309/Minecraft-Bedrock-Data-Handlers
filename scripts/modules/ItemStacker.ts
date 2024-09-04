@@ -33,7 +33,7 @@ const ItemStacker: ModuleInterface = {
     MODULE_DEBUG: false,
     MODULE_SETTINGS: { 
         ITEM_CHECK_INTERVAL: 20,
-        ITEM_MAX_DISTANCE: 10,
+        ITEM_MAX_DISTANCE: 5,
         ITEM_MIN_DISTANCE: 0.5,
         ITEM_EXPIRE_TIMEOUT: 1000 * 60 * 5,
         COMBINED_ITEM_TAG: MODULE_NAME + ':isCombined'
@@ -81,6 +81,26 @@ interface TrackedItemData {
 
 const trackedItems = new Map<string, TrackedItemData>();
 
+function getBiggestItemStack(item: EntityItemComponent, entities: Entity[], primary: boolean): Entity | null {
+    let biggestEntity: Entity | null = null;
+    let biggestAmount = 0;
+
+    for (const entity of entities) {
+        if (entity.id === item.entity.id || entity.hasTag(COMBINED_ITEM_TAG())) continue;
+
+        const otherItem = entity.getComponent("item") as EntityItemComponent;
+        let trackedData = trackedItems.get(entity.id);
+        if (!otherItem || !otherItem.isValid() || !trackedData || primary && !trackedData.primary) continue;
+
+        if (item.itemStack.isStackableWith(otherItem.itemStack) && trackedData.totalAmount > biggestAmount) {
+            biggestAmount = trackedData.totalAmount;
+            biggestEntity = entity;
+        }
+    }
+
+    return biggestEntity;
+}
+
 world.afterEvents.entitySpawn.subscribe(event => {
     const entity = event.entity;
     if (entity.typeId !== 'minecraft:item') return;
@@ -112,25 +132,17 @@ world.afterEvents.entitySpawn.subscribe(event => {
         excludeTags: [COMBINED_ITEM_TAG()],
     });
 
-    for (const nearbyEntity of entities) {
-        if (nearbyEntity.id === entity.id || nearbyEntity.hasTag(COMBINED_ITEM_TAG())) continue;
+    let biggestEntity = getBiggestItemStack(item, entities, true);
+    if (biggestEntity) {
+        newData.primaryItem = biggestEntity.id;
 
-        const nearbyItem = nearbyEntity.getComponent("item") as EntityItemComponent;
-        if (!nearbyItem || !nearbyItem.isValid() || !nearbyItem.itemStack.isStackableWith(item.itemStack)) continue;
-
-        const nearbyData = trackedItems.get(nearbyEntity.id);
-        if (nearbyData && nearbyData.primary) {
-            // Associate the new item with the existing primary item
-            newData.primaryItem = nearbyEntity.id;
+        const nearbyData = trackedItems.get(biggestEntity.id);
+        if (nearbyData) {
             nearbyData.associatedItems.add(entity.id);
             nearbyData.totalAmount += item.itemStack.amount;
-            entity.teleport(nearbyEntity.location); // Teleport the new item to the primary item
-            break;
+            entity.teleport(biggestEntity.location);
         }
-    }
-
-    // If no association was made, the new item becomes primary
-    if (!newData.primaryItem) {
+    } else {
         newData.primary = true;
     }
 
