@@ -61,9 +61,6 @@ export function moduleInit() {
 
 
 import { Entity, world, system, Vector3, Dimension } from "@minecraft/server";
-import { settingsHandler } from "../extensions/SettingsHandler";
-
-settingsHandler.register("EntityStacker", EntityStacker.MODULE_SETTINGS);
 
 const blacklistedTypes = ["minecraft:item", "minecraft:player"];
 const trackedEntities = new Map<string, TrackedEntityData>();

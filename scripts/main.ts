@@ -13,9 +13,10 @@ ItemStacker.MODULE_ENABLED = true;
 ItemStacker.MODULE_INIT();
 
 import EntityStacker from "./modules/EntityStacker";
-import { commandHandler } from "./extensions/CommandHandler";
+import PlotSystem, { clearPlot, createDefaultPlot, createPlotId, loadPlot, savePlot } from "./modules/PlotSystem";
 EntityStacker.MODULE_ENABLED = true;
 EntityStacker.MODULE_INIT();
+PlotSystem.MODULE_INIT();
 
 function showCustomChestUI(player: Player): void {
     // Create a new ChestFormData instance with a size of 54 slots
@@ -65,4 +66,22 @@ world.afterEvents.playerSpawn.subscribe((event) => {
     //showCustomChestUI(event.player);
     chatSuccess(event.player, "Welcome to the server!");
 
+    let plotId = createPlotId()
+    let {plotPosition1, plotPosition2} = createDefaultPlot(plotId, event.player.location)
+
+    let PlotData = {
+        owner: event.player.id,
+        plotId: plotId,
+        plotPosition1: plotPosition1,
+        plotPosition2: plotPosition2,
+        allowedPlayers: [],
+    }
+
+    // wait 10 seconds 
+    plotId = createPlotId()
+    system.waitTicks(200).then(() => {
+        savePlot(plotId, plotPosition1, plotPosition2)
+        clearPlot(PlotData)
+        loadPlot(plotId, event.player.location)
+    });
 });
