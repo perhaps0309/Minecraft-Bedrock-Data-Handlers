@@ -1,4 +1,4 @@
-import { Block, Player, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, Vector2, Vector3, world } from "@minecraft/server";
+import { Block, Player, PlayerBreakBlockBeforeEvent, PlayerPlaceBlockBeforeEvent, StructureAnimationMode, Vector2, Vector3, world } from "@minecraft/server";
 import { SubscriptionHandler } from "../extensions/SubscriptionHandler";
 
 const MODULE_VERSION = "v1.02b";
@@ -22,6 +22,7 @@ interface PlotSystemI {
     PLOT_ROWS: number;
     PLOT_COLUMNS: number;
     PLOT_SIZE: number;
+    PLOT_ENTITIES: boolean; // Allow entities to be saved with the plot
     GAP_SIZE: number;
     BORDER_BLOCK: string; 
     PATH_BLOCK: string; 
@@ -61,6 +62,7 @@ const PlotSystem: ModuleInterface = {
         PLOT_ROWS: 6,
         PLOT_COLUMNS: 6,
         PLOT_SIZE: 15, // 15x15 plot size
+        PLOT_ENTITIES: false, // Allow entities to be saved with the plot
         GAP_SIZE: 2, // Gap of 2 blocks between plots
         BORDER_BLOCK: "minecraft:dirt", // Default border block
         PATH_BLOCK: "minecraft:stone", // Default path block
@@ -141,7 +143,7 @@ export function savePlot(plotId: string, plotPosition1: Vector3, plotPosition2: 
         dimension, 
         extendedPlotPosition1, 
         extendedPlotPosition2, 
-        { includeEntities: true } // Include entities in the structure if needed
+        { includeEntities: PlotSystem.MODULE_SETTINGS.PLOT_ENTITIES } // Include entities in the structure if needed
     );
 
     // Ensure the structure is valid and save it
@@ -164,7 +166,9 @@ export function loadPlot(plotId: string, loadPosition: Vector3) {
     if (structure) {
         // Place the structure at the specified location
         world.structureManager.place(structure, dimension, loadPosition, {
-            includeEntities: true, // Include entities if the structure has them
+            includeEntities: PlotSystem.MODULE_SETTINGS.PLOT_ENTITIES,
+            animationMode: StructureAnimationMode.Blocks,
+            animationSeconds: 5
         });
 
         console.warn(`Plot ${plotId} loaded at ${loadPosition.x}, ${loadPosition.y}, ${loadPosition.z}`);
