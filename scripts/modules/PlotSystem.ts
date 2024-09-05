@@ -132,7 +132,7 @@ export function savePlot(plotId: string, plotPosition1: Vector3, plotPosition2: 
 
     const extendedPlotPosition2 = { 
         x: plotPosition2.x + 1, 
-        y: 319, 
+        y: 200, 
         z: plotPosition2.z + 1 
     };
 
@@ -181,11 +181,13 @@ export function clearPlot(plot: plotData) {
     }
 
     const { plotPosition1, plotPosition2 } = plot;
+    let extendedPlotPosition1 = {x: plotPosition1.x - 1,y: plotPosition1.y,z: plotPosition1.z - 1};
+    let extendedPlotPosition2 = {x: plotPosition2.x + 1,y: 200,z: plotPosition2.z + 1};
 
     // Clear all blocks within the plot area
-    for (let x = plotPosition1.x; x <= plotPosition2.x; x++) {
-        for (let y = plotPosition1.y; y <= plotPosition2.y; y++) {
-            for (let z = plotPosition1.z; z <= plotPosition2.z; z++) {
+    for (let x = extendedPlotPosition1.x; x <= extendedPlotPosition2.x; x++) {
+        for (let y = extendedPlotPosition1.y; y <= 200; y++) {
+            for (let z = extendedPlotPosition1.z; z <= extendedPlotPosition2.z; z++) {
                 const blockPos = { x, y, z };
                 // Set all blocks to air
                 dimension.setBlockType(blockPos, "minecraft:air");
