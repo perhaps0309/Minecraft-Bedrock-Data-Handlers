@@ -155,7 +155,7 @@ export function queueForm(player: Player, form: ActionFormData, callback: (respo
         if (response.canceled) {
             // If the player is currently busy, then retry
             if (response.cancelationReason == FormCancelationReason.UserBusy) {
-                return settingsHandler.openSettingsMenu(player);
+                queueForm(player, form, callback);
             }
             return;
         };
