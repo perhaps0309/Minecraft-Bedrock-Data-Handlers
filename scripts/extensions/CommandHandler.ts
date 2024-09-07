@@ -1,21 +1,22 @@
 import { ChatSendBeforeEvent, world } from "@minecraft/server";
+import { WorldData } from './WorldData';
 
 interface CommandOptions {
-    description: string;
     callback: (args: string[], sender: any) => void;
+    description?: string;
     permissions?: string[];
 }
 
 class CommandHandler {
     private registeredCommands: Map<string, CommandOptions> = new Map();
-    private prefix: string = "!";
+    private dataPrefix: string = "commands:";
+    private prefix: string = WorldData.getDynamicProperty(`${this.dataPrefix}prefix`) || "!";
     private isInit: boolean = false;
 
     // Register a new command
     public register(command: string, options: CommandOptions) {
         this.registeredCommands.set(command.toLowerCase(), options); // Case-insensitive
         this.init(); // Ensure initialization
-        console.warn(`[CommandHandler] Registered command: ${command.toLowerCase()} - ${options.description}`);
     }
 
     // Check if the player has the required permissions (tags)
@@ -69,11 +70,16 @@ class CommandHandler {
         commandOptions.callback(currentArgs, sender);
     }
 
+    public updatePrefix(prefix: string) {
+        WorldData.setDynamicProperty(`${this.dataPrefix}prefix`, prefix);
+        this.prefix = prefix;   
+    }
+
     // Initialize command handler
     private init() {
         if (this.isInit) return;
         this.isInit = true;
-
+        
         world.beforeEvents.chatSend.subscribe((event: ChatSendBeforeEvent) => {
             this.handleChatMessage(event);
         });

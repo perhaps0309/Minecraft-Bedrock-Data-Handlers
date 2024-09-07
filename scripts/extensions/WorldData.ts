@@ -1,12 +1,7 @@
 import { Vector3, world, World } from "@minecraft/server";
 import { safeJsonParser, safeJsonStringify } from "../functions/json";
 
-export class WorldDataT {
-    public world: World;
-    constructor(world: World) {
-        this.world = world;
-    }
-
+export abstract class WorldData {
     /**
      * Get a dynamic property from the world
      * @param {string} key The key of the property
@@ -15,8 +10,8 @@ export class WorldDataT {
      * const value = WorldData.getDynamicProperty("myProperty");
      * console.log(value); // myValue
      */
-    public getDynamicProperty(key: string): any {
-        let value = this.world.getDynamicProperty(key);
+    public static getDynamicProperty(key: string): any {
+        let value = world.getDynamicProperty(key);
         return safeJsonParser(value);
     }
 
@@ -31,12 +26,10 @@ export class WorldDataT {
      * WorldData.setDynamicProperty("myProperty2", { key: "value" });
      * console.log(WorldData.getDynamicProperty("myProperty2")); // { key: "value" }
      */
-    public setDynamicProperty(key: string, value: any): void {
+    public static setDynamicProperty(key: string, value: any): void {
         if (value === undefined) throw Error("Invalid value.");
         if (typeof value === "object") value = safeJsonStringify(value);
 
-        this.world.setDynamicProperty(key, value);
+        world.setDynamicProperty(key, value);
     }
 }
-
-export const WorldData = new WorldDataT(world);

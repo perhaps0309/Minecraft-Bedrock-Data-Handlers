@@ -14,6 +14,8 @@ ItemStacker.MODULE_INIT();
 
 import EntityStacker from "./modules/EntityStacker";
 import PlotSystem, { clearPlot, createDefaultPlot, createPlotId, loadPlot, savePlot } from "./modules/PlotSystem";
+import { commandHandler } from "./extensions/CommandHandler";
+import { settingsHandler } from "./extensions/SettingsHandler";
 EntityStacker.MODULE_ENABLED = true;
 EntityStacker.MODULE_INIT();
 PlotSystem.MODULE_INIT();
@@ -84,4 +86,25 @@ world.afterEvents.playerSpawn.subscribe((event) => {
         clearPlot(PlotData)
         loadPlot(plotId, event.player.location)
     });
+});
+
+settingsHandler.register("MODULE", {
+    name: "MODULE",
+    settings: {
+        "setting1": true
+    }
+});
+
+commandHandler.register("create", {
+    description: "createDesc",
+    callback: (args: string[], player: Player) => {
+        
+    }
+});
+
+commandHandler.register("open", {
+    description: "openD",
+    callback: (args: string[], player: Player) => {
+        settingsHandler.openSettingsMenu(player);
+    }
 });

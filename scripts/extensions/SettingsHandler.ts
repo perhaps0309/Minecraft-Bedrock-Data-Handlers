@@ -1,4 +1,7 @@
+import { ActionFormData, FormCancelationReason } from "@minecraft/server-ui";
 import { commandHandler } from "./CommandHandler";
+import { Player, system } from "@minecraft/server";
+import { queueForm } from "../functions/forms";
 
 interface SettingsTable {
     [key: string]: any;
@@ -31,6 +34,29 @@ class SettingsHandler {
                     sender.sendMessage(`§cUsage: !!${moduleName} settings <setting> <value>`);
                 }
             },
+        });
+    }
+
+    // Used for letting the user modify different settings through a GUI
+    public openSettingsMenu(player: Player) {
+        system.run(() => {
+            const form = new ActionFormData();
+            const formMap: [string, RegisteredModule][] = [];
+            form.title("Select Module");
+            form.body("Choose a module which you want to edit settings for");
+
+            let index = 0;
+            for (const registeredModule of this.registeredModules.entries()) {
+                const moduleName = registeredModule[0];
+                form.button(moduleName);
+                formMap[index] = registeredModule;
+                index++;
+            }
+    
+            queueForm(player, form, (response) => {
+                const moduleSelected = formMap[response.selection!];
+                console.warn(moduleSelected);
+            });
         });
     }
 
@@ -77,7 +103,7 @@ class SettingsHandler {
         }
     }
 
-    // Cast the value to the correct type
+    // Cast the string value to its correct type 
     private castToCorrectType(value: string, originalValue: any): any {
         if (typeof originalValue === "number") {
             return Number(value);
